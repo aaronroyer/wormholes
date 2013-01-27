@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+# Usage: hole [NAME]
+#
+# Opens the other end of an existing wormhole. Pipe text into worm and use hole
+# to see the text coming out in real-time.
+#
+# NAME is an optional name to give the created wormhole. If you use a name
+# with worm then use the same name with hole to open the other end of the
+# named wormhole.
+#
+# To use, pipe output to worm
+#
+#   $ output_producing_program | worm
+#
+# Then, in another shell, get the output with hole
+#
+#   $ hole
+#   <output comes out here...>
+#
+require 'optparse'
+
+OptionParser.new do |opts|
+  opts.on('-h', '--help') do
+    IO.read(__FILE__).each_line do |line|
+      break unless line =~ /^#/
+      puts line[2..-1] unless line =~ /^#!/
+    end
+    exit
+  end
+end.parse!
+
+
+require 'wormholes'
+
+opts = {}
+opts[:name] = ARGV[0] if ARGV[0]
+
+hole = Wormholes::Hole.new opts
+hole.open
+
+trap('EXIT') { hole.close }
+
+hole.listen
